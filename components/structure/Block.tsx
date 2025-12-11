@@ -19,6 +19,9 @@ const Block: React.FC<BlockProps> = ({ config, renderDelay = 0 }) => {
   const height = Math.max(0.01, size?.y || 1);
   const depth = Math.max(0.01, size?.z || 1);
 
+  // Component Identity
+  const isDoor = config.type === 'door';
+
   // Material Logic
   const isGlass = material === 'glass';
   const isStone = material === 'concrete' || material === 'stone';
@@ -27,9 +30,6 @@ const Block: React.FC<BlockProps> = ({ config, renderDelay = 0 }) => {
   // Base props
   const baseColor = color || '#ffffff';
   
-  // Logic: Use StandardMaterial for solids (opacity 1) and Physical for Glass
-  // This prevents "Ghosting" artifacts on solid walls.
-
   return (
     <mesh
       ref={meshRef}
@@ -80,6 +80,14 @@ const Block: React.FC<BlockProps> = ({ config, renderDelay = 0 }) => {
         color={isGlass ? '#ffffff' : '#1a252f'}
         scale={1.005} // Slight offset to prevent z-fighting
       />
+
+      {/* Door Handle Detail */}
+      {isDoor && (
+        <mesh position={[width * 0.35, 0, depth/2 + 0.05]}>
+           <sphereGeometry args={[0.08, 16, 16]} />
+           <meshStandardMaterial color="#f39c12" metalness={0.7} roughness={0.2} />
+        </mesh>
+      )}
     </mesh>
   );
 };

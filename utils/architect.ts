@@ -67,16 +67,92 @@ const generateRoom = (module: ModuleConfig): ComponentConfig[] => {
     shape: 'box'
   });
 
-  // South Wall (+Z)
-  parts.push({
-    id: uid('wall_s'),
-    type: 'wall',
-    position: { x, y: wallY, z: z + depth / 2 - WALL_THICKNESS / 2 },
-    size: { x: width, y: wallH, z: WALL_THICKNESS },
-    color: style.wallColor || '#ecf0f1',
-    material: style.wallMaterial || 'brick',
-    shape: 'box'
-  });
+  // South Wall (+Z) - ENTRANCE LOGIC
+  // If this room is on the ground floor and wide enough, we build a door.
+  const isGroundFloor = y < 0.5;
+  const canFitDoor = width > 2.2;
+
+  if (isGroundFloor && canFitDoor) {
+    const doorW = 1.2;
+    const doorH = 2.2;
+    
+    // Calculate segments
+    const wallLeftW = (width - doorW) / 2;
+    const wallRightW = wallLeftW;
+    const wallTopH = wallH - doorH; // Lintel height
+
+    // Left Segment
+    parts.push({
+      id: uid('wall_s_left'),
+      type: 'wall',
+      position: { 
+        x: x - (width/2) + (wallLeftW/2), 
+        y: wallY, 
+        z: z + depth / 2 - WALL_THICKNESS / 2 
+      },
+      size: { x: wallLeftW, y: wallH, z: WALL_THICKNESS },
+      color: style.wallColor || '#ecf0f1',
+      material: style.wallMaterial || 'brick',
+      shape: 'box'
+    });
+
+    // Right Segment
+    parts.push({
+      id: uid('wall_s_right'),
+      type: 'wall',
+      position: { 
+        x: x + (width/2) - (wallRightW/2), 
+        y: wallY, 
+        z: z + depth / 2 - WALL_THICKNESS / 2 
+      },
+      size: { x: wallRightW, y: wallH, z: WALL_THICKNESS },
+      color: style.wallColor || '#ecf0f1',
+      material: style.wallMaterial || 'brick',
+      shape: 'box'
+    });
+
+    // Top Segment (Lintel)
+    parts.push({
+      id: uid('wall_s_top'),
+      type: 'wall',
+      position: { 
+        x: x, 
+        y: (y + FLOOR_HEIGHT) + doorH + (wallTopH/2), 
+        z: z + depth / 2 - WALL_THICKNESS / 2 
+      },
+      size: { x: doorW, y: wallTopH, z: WALL_THICKNESS },
+      color: style.wallColor || '#ecf0f1',
+      material: style.wallMaterial || 'brick',
+      shape: 'box'
+    });
+
+    // The Door
+    parts.push({
+      id: uid('door_main'),
+      type: 'door',
+      position: { 
+        x: x, 
+        y: (y + FLOOR_HEIGHT) + doorH / 2, 
+        z: z + depth / 2 - WALL_THICKNESS / 2 
+      },
+      size: { x: doorW, y: doorH, z: WALL_THICKNESS * 0.8 }, // Slightly recessed
+      color: '#5d4037', // Wood color
+      material: 'wood',
+      shape: 'box'
+    });
+
+  } else {
+    // Solid South Wall (Upper floor or too small)
+    parts.push({
+      id: uid('wall_s'),
+      type: 'wall',
+      position: { x, y: wallY, z: z + depth / 2 - WALL_THICKNESS / 2 },
+      size: { x: width, y: wallH, z: WALL_THICKNESS },
+      color: style.wallColor || '#ecf0f1',
+      material: style.wallMaterial || 'brick',
+      shape: 'box'
+    });
+  }
 
   // East Wall (+X)
   const sideWallWidth = clamp(depth - (WALL_THICKNESS * 2));
