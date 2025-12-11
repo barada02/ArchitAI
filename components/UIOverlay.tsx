@@ -14,9 +14,18 @@ const UIOverlay: React.FC<UIOverlayProps> = ({ onGenerate, onClear, isGenerated,
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (prompt.trim()) {
+    
+    // Guard clause: Prevent generation if empty, already generated, or currently loading
+    if (prompt.trim() && !isGenerated && !isLoading) {
       onGenerate(prompt);
     }
+  };
+
+  const handleClearClick = (e: React.MouseEvent) => {
+    // Critical: Prevent default behavior and stop event from bubbling up to the form
+    e.preventDefault();
+    e.stopPropagation();
+    onClear();
   };
 
   return (
@@ -57,7 +66,7 @@ const UIOverlay: React.FC<UIOverlayProps> = ({ onGenerate, onClear, isGenerated,
             {isGenerated ? (
               <button
                 type="button"
-                onClick={onClear}
+                onClick={handleClearClick}
                 className="px-6 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-semibold shadow-md transition-colors flex items-center gap-2"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
