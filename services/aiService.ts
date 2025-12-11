@@ -13,12 +13,12 @@ const moduleSchema: SchemaParams = {
     id: { type: Type.STRING },
     type: { 
       type: Type.STRING, 
-      enum: ['room', 'tower'],
-      description: "The type of structure. 'room' creates a rectangular building block. 'tower' creates a cylindrical spire."
+      enum: ['room', 'tower', 'boundary', 'balcony'],
+      description: "The type of structure. 'room': basic building block. 'tower': cylindrical. 'boundary': perimeter wall/fence. 'balcony': raised platform with railings."
     },
     position: {
       type: Type.OBJECT,
-      description: "Center X/Z position on the ground. Y is usually 0.",
+      description: "Center X/Z position on the ground. Y is height (0 for ground, 3 for 2nd floor).",
       properties: {
         x: { type: Type.NUMBER },
         y: { type: Type.NUMBER },
@@ -28,7 +28,7 @@ const moduleSchema: SchemaParams = {
     },
     size: {
       type: Type.OBJECT,
-      description: "Dimensions. For Room: [width, height, depth]. For Tower: [radius, height, radius].",
+      description: "Dimensions. Room/Boundary: [width, height, depth]. Tower: [radius, height, radius].",
       properties: {
         x: { type: Type.NUMBER },
         y: { type: Type.NUMBER },
@@ -71,27 +71,29 @@ export const generateHouseBlueprint = async (prompt: string): Promise<HouseBluep
       contents: prompt,
       config: {
         systemInstruction: `
-          You are a Senior Level Designer for a Stylized Fantasy Game (like World of Warcraft or Overwatch).
-          Your job is to generate architectural blueprints composed of 'Modules' (Rooms and Towers).
+          You are a Senior Architect for a 3D Home Builder.
+          Your job is to generate architectural blueprints composed of 'Modules'.
+
+          **MODULE TYPES:**
+          1. **room**: Standard living space. Has walls, floor, and roof.
+          2. **tower**: Cylindrical vertical structure.
+          3. **boundary**: A perimeter wall or fence surrounding the house. Usually low height (1-2m). NO ROOF.
+          4. **balcony**: An outdoor platform on upper floors. Has railings. NO ROOF.
 
           **DESIGN RULES:**
-          1. **Composition**: Don't just make one box. Combine multiple modules. 
-             - Example: A large central room (6x4x6) + a smaller side room (3x3x4) + a tall tower (radius 1.5) attached to the corner.
-          2. **Stylization**:
-             - Use 'gable' roofs for cottages.
-             - Use 'flat' roofs for modern.
-             - Use 'stone' for towers and foundations.
-             - Use 'wood' for upper floors.
-          3. **Colors**: Use vibrant, coherent color palettes. 
-             - Evil/Gothic: Dark stone walls, dark blue/purple roofs.
-             - Cozy: White/Cream walls, bright orange/red roofs.
-          4. **Placement**: Ensure modules touch or slightly overlap so the building looks connected. Y position should usually be 0 for the ground floor.
+          - **Boundaries**: If user asks for a boundary/fence, create a large 'boundary' module surrounding the main rooms.
+          - **Balconies**: If user asks for a balcony, place a 'balcony' module (height ~0.2, y > 0) attached to a room.
+          - **Composition**: Combine multiple modules. Overlap them slightly.
+          - **Stylization**:
+             - "Indian style": Flat roofs, warm colors (cream/orange), boundary walls, verandas (balconies).
+             - "Modern": Boxy, concrete/glass, flat roofs.
+             - "Cottage": Gable roofs, brick/wood.
 
-          Do not worry about windows or doors yet; the engine handles basic structure first.
+          Generate a coherent structure based on the user's prompt.
         `,
         responseMimeType: "application/json",
         responseSchema: blueprintSchema,
-        temperature: 0.8, 
+        temperature: 0.75, 
       }
     });
 
