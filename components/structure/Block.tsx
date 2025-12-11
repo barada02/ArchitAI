@@ -15,29 +15,20 @@ const Block: React.FC<BlockProps> = ({ config, renderDelay = 0 }) => {
   const { size, position, rotation, color, material, shape = 'box' } = config;
   
   // Dimensions
-  const width = size?.x || 1;
-  const height = size?.y || 1;
-  const depth = size?.z || 1;
+  const width = Math.max(0.01, size?.x || 1);
+  const height = Math.max(0.01, size?.y || 1);
+  const depth = Math.max(0.01, size?.z || 1);
 
   // Material Logic
   const isGlass = material === 'glass';
   const isStone = material === 'concrete' || material === 'stone';
   const isWood = material === 'wood';
 
-  // Physical properties for PBR (Physically Based Rendering)
-  const materialProps = {
-    color: color || '#ffffff',
-    roughness: isGlass ? 0.05 : isStone ? 0.9 : 0.6,
-    metalness: isGlass ? 0.1 : isStone ? 0.1 : 0.0,
-    transmission: isGlass ? 0.9 : 0, // Glass transparency
-    thickness: isGlass ? 0.5 : 0,    // Refraction depth
-    transparent: isGlass,
-    opacity: isGlass ? 0.7 : 1,
-    emissive: isGlass ? color : '#000000', // Windows glow slightly
-    emissiveIntensity: isGlass ? 0.8 : 0,
-  };
-
-  const outlineColor = isGlass ? '#ffffff' : '#2c3e50';
+  // Base props
+  const baseColor = color || '#ffffff';
+  
+  // Logic: Use StandardMaterial for solids (opacity 1) and Physical for Glass
+  // This prevents "Ghosting" artifacts on solid walls.
 
   return (
     <mesh
@@ -62,14 +53,32 @@ const Block: React.FC<BlockProps> = ({ config, renderDelay = 0 }) => {
         <boxGeometry args={[width, height, depth]} />
       )}
 
-      {/* Advanced Material */}
-      <meshPhysicalMaterial {...materialProps} />
+      {/* Advanced Material Switching */}
+      {isGlass ? (
+        <meshPhysicalMaterial 
+          color={baseColor}
+          roughness={0.05}
+          metalness={0.1}
+          transmission={0.9}
+          thickness={0.5}
+          transparent={true}
+          opacity={0.6}
+          emissive={baseColor}
+          emissiveIntensity={0.5}
+        />
+      ) : (
+        <meshStandardMaterial 
+          color={baseColor}
+          roughness={isStone ? 0.9 : 0.6}
+          metalness={0.1}
+        />
+      )}
 
       {/* Stylized Edges (The "Blizzard" Look) */}
       <Edges 
         threshold={15} // Only show edges on sharp angles
-        color={outlineColor}
-        scale={1.01} // Slight offset to prevent z-fighting
+        color={isGlass ? '#ffffff' : '#1a252f'}
+        scale={1.005} // Slight offset to prevent z-fighting
       />
     </mesh>
   );

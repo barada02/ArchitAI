@@ -10,11 +10,14 @@ import { ComponentConfig, ModuleConfig, Vector3 } from "../types/blueprint";
  * 3. Returns a flat list of atomic components for the Renderer.
  */
 
-const WALL_THICKNESS = 0.2;
+const WALL_THICKNESS = 0.25; // Slightly thicker to prevent Z-fighting on edges
 const FLOOR_HEIGHT = 0.2;
 
 // Helper to generate a unique ID
 const uid = (prefix: string) => `${prefix}_${Math.random().toString(36).substr(2, 9)}`;
+
+// Helper to prevent negative dimensions which cause inverted/invisible geometry
+const clamp = (val: number, min: number = 0.1) => Math.max(val, min);
 
 export const generateArchitecture = (modules: ModuleConfig[]): ComponentConfig[] => {
   let components: ComponentConfig[] = [];
@@ -49,7 +52,7 @@ const generateRoom = (module: ModuleConfig): ComponentConfig[] => {
 
   // 2. Walls (4 sides to create a hollow room)
   // Wall Height is full height minus floor
-  const wallH = height;
+  const wallH = clamp(height);
   const wallY = y + FLOOR_HEIGHT + wallH / 2;
 
   // North Wall (-Z)
@@ -75,11 +78,13 @@ const generateRoom = (module: ModuleConfig): ComponentConfig[] => {
   });
 
   // East Wall (+X) - Width matches depth minus overlaps to avoid z-fighting
+  const sideWallWidth = clamp(depth - (WALL_THICKNESS * 2));
+  
   parts.push({
     id: uid('wall_e'),
     type: 'wall',
     position: { x: x + width / 2 - WALL_THICKNESS / 2, y: wallY, z },
-    size: { x: WALL_THICKNESS, y: wallH, z: depth - (WALL_THICKNESS * 2) }, // Tuck inside
+    size: { x: WALL_THICKNESS, y: wallH, z: sideWallWidth }, // Tuck inside
     color: style.wallColor || '#ecf0f1',
     material: style.wallMaterial || 'brick',
     shape: 'box'
@@ -90,14 +95,14 @@ const generateRoom = (module: ModuleConfig): ComponentConfig[] => {
     id: uid('wall_w'),
     type: 'wall',
     position: { x: x - width / 2 + WALL_THICKNESS / 2, y: wallY, z },
-    size: { x: WALL_THICKNESS, y: wallH, z: depth - (WALL_THICKNESS * 2) },
+    size: { x: WALL_THICKNESS, y: wallH, z: sideWallWidth },
     color: style.wallColor || '#ecf0f1',
     material: style.wallMaterial || 'brick',
     shape: 'box'
   });
 
   // 3. Roof
-  const roofH = style.roofHeight || 1.5;
+  const roofH = clamp(style.roofHeight || 1.5);
   const roofY = y + FLOOR_HEIGHT + wallH + (style.roofType === 'flat' ? 0.1 : roofH / 2);
 
   if (style.roofType === 'gable') {
@@ -109,7 +114,7 @@ const generateRoom = (module: ModuleConfig): ComponentConfig[] => {
       // Rotate 90 deg on Y to align with width, or 0 for depth. 
       // Defaulting to align with the wider side or X axis.
       rotation: { x: 0, y: Math.PI / 2, z: 0 }, 
-      size: { x: depth + 0.5, y: roofH, z: width + 0.5 }, // Overhang
+      size: { x: depth + 0.6, y: roofH, z: width + 0.6 }, // Overhang
       color: style.roofColor || '#2c3e50',
       shape: 'prism'
     });
@@ -118,9 +123,12 @@ const generateRoom = (module: ModuleConfig): ComponentConfig[] => {
       id: uid('roof'),
       type: 'roof',
       position: { x, y: roofY, z },
-      size: { x: width + 0.5, y: roofH, z: depth + 0.5 },
+      // IMPORTANT: Rotate 45deg (PI/4) because a 4-sided Cone geometry is diamond-oriented by default
+      rotation: { x: 0, y: Math.PI / 4, z: 0 },
+      // Scale radius up by sqrt(2) approx (1.5) to cover corners
+      size: { x: width * 1.5, y: roofH, z: depth * 1.5 },
       color: style.roofColor || '#2c3e50',
-      shape: 'box' // Roof component handles 'box' as pyramid often in strict mode, but let's assume Roof.tsx handles generic
+      shape: 'box' // Roof.tsx interprets 'box' as a generic pyramid/flat handler
     });
   } else {
     // Flat
@@ -160,7 +168,7 @@ const generateTower = (module: ModuleConfig): ComponentConfig[] => {
     id: uid('tower_roof'),
     type: 'roof',
     position: { x, y: y + height + roofH / 2, z },
-    size: { x: radius + 0.4, y: roofH, z: radius + 0.4 }, // Overhang
+    size: { x: radius + 0.5, y: roofH, z: radius + 0.5 }, // Overhang
     color: style.roofColor || '#2980b9',
     shape: 'cylinder' // Roof component treats cylinder/box as Cone usually or we add explicit logic
   });

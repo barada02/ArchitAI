@@ -15,33 +15,38 @@ const Roof: React.FC<RoofProps> = ({ config, renderDelay = 0 }) => {
   const { size, position, rotation, color, shape } = config;
   
   // Dimensions
-  // If it's a pyramid/cone, radius is roughly half the width
-  const radius = size?.x ? size.x / 1.4 : 3; 
-  const height = size?.y || 2;
-  const depth = size?.z || 3;
-  const width = size?.x || 3;
+  const width = Math.max(0.1, size?.x || 3);
+  const height = Math.max(0.1, size?.y || 2);
+  const depth = Math.max(0.1, size?.z || 3);
 
   const isPrism = shape === 'prism';
   const isCylinder = shape === 'cylinder';
   const isBox = shape === 'box'; 
 
   // Geometry Selection
-  let Geometry = <coneGeometry args={[radius, height, 4]} />; // Default Pyramid (4 sides)
+  let Geometry = <coneGeometry args={[width/2, height, 4]} />; // Default Fallback
 
   if (isPrism) {
-    // A-Frame / Gable
+    // A-Frame / Gable (Cylinder with 3 sides)
     Geometry = <cylinderGeometry args={[width/2, width/2, height, 3]} />;
   } else if (isCylinder) {
     // Conical Tower Roof
-    Geometry = <coneGeometry args={[radius, height, 32]} />;
+    Geometry = <coneGeometry args={[width, height, 32]} />;
   } else if (isBox) {
-    // Sometimes 'box' shape is passed for flat roofs or explicit pyramid logic from architect
-    // If height is small, it's flat
+    // Logic: 'Box' shape in architect often denotes a generic roof block.
+    // If it's a pyramid (Square Cone), it needs 4 sides.
+    // NOTE: Architect engine now passes a rotation of PI/4 for pyramids so they align with walls.
+    
     if (height < 0.5) {
+        // Flat Roof
         Geometry = <boxGeometry args={[width, height, depth]} />;
     } else {
-        // Assume Pyramid for box shape with height
-        Geometry = <coneGeometry args={[width/1.4, height, 4]} />;
+        // Pyramid
+        // ConeGeometry args: radius, height, radialSegments
+        // Calculate radius to encompass the square base (half diagonal) or just use width/2 for inscribed.
+        // Using width/1.414 (approx sqrt 2) is circumscribed, width/2 is inscribed. 
+        // Architect engine sends a sized-up width (1.5x) so we can just use width/2 here comfortably.
+        Geometry = <coneGeometry args={[width/2, height, 4]} />;
     }
   }
 
