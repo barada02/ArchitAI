@@ -80,16 +80,18 @@ export const generateHouseBlueprint = async (prompt: string): Promise<HouseBluep
           3. **boundary**: A perimeter wall or fence surrounding the house. Usually low height (1-2m). NO ROOF.
           4. **balcony**: An outdoor platform on upper floors. Has railings. NO ROOF.
 
-          **DESIGN RULES:**
-          - **Boundaries**: If user asks for a boundary/fence, create a large 'boundary' module surrounding the main rooms.
-          - **Balconies**: If user asks for a balcony, place a 'balcony' module (height ~0.2, y > 0) attached to a room.
-          - **Composition**: Combine multiple modules. Overlap them slightly.
-          - **Stylization**:
-             - "Indian style": Flat roofs, warm colors (cream/orange), boundary walls, verandas (balconies).
-             - "Modern": Boxy, concrete/glass, flat roofs.
-             - "Cottage": Gable roofs, brick/wood.
+          **PLACEMENT RULES (CRITICAL):**
+          - **Balconies**: Must be attached to a room. Place the balcony *in front* (South/+Z) of a room on an upper floor.
+            - Example: Room at z=0, depth=4. Balcony at z=3, depth=2.
+          - **Setbacks**: For multi-story homes, consider making the 2nd floor smaller or shifted back (North/-Z) to create space for a balcony on the 1st floor roof.
+          - **Boundaries**: Make them large enough to enclose the whole house. e.g., if house is 10x10, boundary should be 20x20.
 
-          Generate a coherent structure based on the user's prompt.
+          **STYLES:**
+          - **Indian**: Flat roofs, verandas (large balconies), boundary walls with gates, warm colors (cream, orange, red).
+          - **Modern**: Boxy, flat roofs, glass materials, concrete.
+          - **Cottage**: Gable roofs, brick/wood.
+
+          Generate a coherent structure.
         `,
         responseMimeType: "application/json",
         responseSchema: blueprintSchema,

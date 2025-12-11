@@ -237,23 +237,40 @@ const generateBoundary = (module: ModuleConfig): ComponentConfig[] => {
 
   const wallH = height;
   const wallY = y + wallH / 2;
+  
+  // FIXED DIMENSIONS
   const gateWidth = 2.0;
-  
-  // Boundary Logic: 4 Walls, but front wall has a distinct GATE
-  
+  const pillarSize = 0.6; // Slightly thicker than wall
+  const wallThick = 0.25;
+
   // 1. GATE PILLARS & GATE (South Side)
-  const pillarSize = WALL_THICKNESS * 2; 
-  const pillarH = wallH + 0.2; // Pillars slightly taller
+  // To avoid overlap, we calculate the remaining width for the walls
+  // Total Width = Left Wall + Pillar + Gate + Pillar + Right Wall
+  // Wall Width = (Total - Gate - 2*Pillar) / 2
+  const availableForWalls = width - gateWidth - (pillarSize * 2);
+  const wallSegWidth = Math.max(0.1, availableForWalls / 2);
   
-  const wallLeftW = (width - gateWidth) / 2;
-  const wallRightW = wallLeftW;
+  const pillarH = wallH + 0.3; // Pillars stand proud
   
+  // Positions
+  // Center is x. 
+  // Gate is at x.
+  // Right Pillar Center = x + gateWidth/2 + pillarSize/2
+  // Right Wall Center = Right Pillar Edge + wallSegWidth/2
+  // Right Pillar Edge = x + gateWidth/2 + pillarSize
+  
+  const rPillarX = x + gateWidth/2 + pillarSize/2;
+  const lPillarX = x - gateWidth/2 - pillarSize/2;
+  
+  const rWallX = (x + gateWidth/2 + pillarSize) + wallSegWidth/2;
+  const lWallX = (x - gateWidth/2 - pillarSize) - wallSegWidth/2;
+
   // Left Wall Segment
   parts.push({
     id: uid('bound_s_left'),
     type: 'wall',
-    position: { x: x - width/2 + wallLeftW/2, y: wallY, z: z + depth/2 },
-    size: { x: wallLeftW, y: wallH, z: WALL_THICKNESS },
+    position: { x: lWallX, y: wallY, z: z + depth/2 },
+    size: { x: wallSegWidth, y: wallH, z: wallThick },
     color: style.wallColor || '#bdc3c7',
     shape: 'box'
   });
@@ -262,17 +279,17 @@ const generateBoundary = (module: ModuleConfig): ComponentConfig[] => {
   parts.push({
     id: uid('bound_s_right'),
     type: 'wall',
-    position: { x: x + width/2 - wallRightW/2, y: wallY, z: z + depth/2 },
-    size: { x: wallRightW, y: wallH, z: WALL_THICKNESS },
+    position: { x: rWallX, y: wallY, z: z + depth/2 },
+    size: { x: wallSegWidth, y: wallH, z: wallThick },
     color: style.wallColor || '#bdc3c7',
     shape: 'box'
   });
 
-  // Pillars
+  // Pillars (Thicker z-axis to stand out)
   parts.push({
     id: uid('gate_pillar_l'),
     type: 'wall',
-    position: { x: x - gateWidth/2 - pillarSize/2, y: y + pillarH/2, z: z + depth/2 },
+    position: { x: lPillarX, y: y + pillarH/2, z: z + depth/2 },
     size: { x: pillarSize, y: pillarH, z: pillarSize },
     color: '#34495e',
     shape: 'box'
@@ -280,17 +297,17 @@ const generateBoundary = (module: ModuleConfig): ComponentConfig[] => {
   parts.push({
     id: uid('gate_pillar_r'),
     type: 'wall',
-    position: { x: x + gateWidth/2 + pillarSize/2, y: y + pillarH/2, z: z + depth/2 },
+    position: { x: rPillarX, y: y + pillarH/2, z: z + depth/2 },
     size: { x: pillarSize, y: pillarH, z: pillarSize },
     color: '#34495e',
     shape: 'box'
   });
 
-  // The Gate Itself (Thinner, different color)
+  // The Gate Itself (Recessed and thinner)
   parts.push({
     id: uid('bound_gate'),
     type: 'door',
-    position: { x: x, y: y + wallH/2, z: z + depth/2 },
+    position: { x: x, y: y + wallH * 0.45, z: z + depth/2 }, // Slightly higher off ground? No, ground level.
     size: { x: gateWidth, y: wallH * 0.9, z: 0.1 }, 
     color: '#5d4037', // Wood
     material: 'wood',
@@ -303,16 +320,16 @@ const generateBoundary = (module: ModuleConfig): ComponentConfig[] => {
     id: uid('bound_n'),
     type: 'wall',
     position: { x, y: wallY, z: z - depth/2 },
-    size: { x: width, y: wallH, z: WALL_THICKNESS },
+    size: { x: width, y: wallH, z: wallThick },
     color: style.wallColor || '#bdc3c7',
     shape: 'box'
   });
-  // East
+  // East - Needs to span the full depth
   parts.push({
     id: uid('bound_e'),
     type: 'wall',
     position: { x: x + width/2, y: wallY, z },
-    size: { x: WALL_THICKNESS, y: wallH, z: depth },
+    size: { x: wallThick, y: wallH, z: depth },
     color: style.wallColor || '#bdc3c7',
     shape: 'box'
   });
@@ -321,7 +338,7 @@ const generateBoundary = (module: ModuleConfig): ComponentConfig[] => {
     id: uid('bound_w'),
     type: 'wall',
     position: { x: x - width/2, y: wallY, z },
-    size: { x: WALL_THICKNESS, y: wallH, z: depth },
+    size: { x: wallThick, y: wallH, z: depth },
     color: style.wallColor || '#bdc3c7',
     shape: 'box'
   });
@@ -346,20 +363,66 @@ const generateBalcony = (module: ModuleConfig): ComponentConfig[] => {
     shape: 'box'
   });
 
-  // 2. Railings (Thin walls on all 4 sides)
-  const railH = 1.0;
-  const railThick = 0.1;
-  const railY = y + 0.2 + railH/2;
+  // 2. Corner Posts (Aesthetics)
+  const postSize = 0.15;
+  const railH = 0.9;
+  const postY = y + 0.2 + railH/2;
+  
+  // Helper for posts
+  const addPost = (px: number, pz: number) => {
+    parts.push({
+      id: uid('rail_post'),
+      type: 'wall',
+      position: { x: px, y: postY, z: pz },
+      size: { x: postSize, y: railH, z: postSize },
+      color: '#2c3e50',
+      shape: 'box'
+    });
+  };
 
-  // Render 4 Railings to be safe (AI might place balcony anywhere)
-  // Front
-  parts.push({ id: uid('rail_f'), type: 'wall', position: { x, y: railY, z: z + depth/2 }, size: { x: width, y: railH, z: railThick }, color: '#34495e', shape: 'box' });
-  // Back
-  parts.push({ id: uid('rail_b'), type: 'wall', position: { x, y: railY, z: z - depth/2 }, size: { x: width, y: railH, z: railThick }, color: '#34495e', shape: 'box' });
-  // Left
-  parts.push({ id: uid('rail_l'), type: 'wall', position: { x: x - width/2, y: railY, z }, size: { x: railThick, y: railH, z: depth }, color: '#34495e', shape: 'box' });
-  // Right
-  parts.push({ id: uid('rail_r'), type: 'wall', position: { x: x + width/2, y: railY, z }, size: { x: railThick, y: railH, z: depth }, color: '#34495e', shape: 'box' });
+  addPost(x - width/2 + postSize/2, z + depth/2 - postSize/2); // Front Left
+  addPost(x + width/2 - postSize/2, z + depth/2 - postSize/2); // Front Right
+  addPost(x - width/2 + postSize/2, z - depth/2 + postSize/2); // Back Left
+  addPost(x + width/2 - postSize/2, z - depth/2 + postSize/2); // Back Right
+
+  // 3. Railings
+  // Made thinner and glass-like or metal
+  const railThick = 0.05;
+  const railY = y + 0.2 + railH/2;
+  const railColor = '#34495e';
+
+  // Front Rail
+  parts.push({ 
+    id: uid('rail_f'), 
+    type: 'wall', 
+    position: { x, y: railY, z: z + depth/2 - railThick/2 }, 
+    size: { x: width - postSize*2, y: railH * 0.8, z: railThick }, 
+    color: railColor, 
+    shape: 'box' 
+  });
+  
+  // Left Rail
+  parts.push({ 
+    id: uid('rail_l'), 
+    type: 'wall', 
+    position: { x: x - width/2 + railThick/2, y: railY, z }, 
+    size: { x: railThick, y: railH * 0.8, z: depth - postSize*2 }, 
+    color: railColor, 
+    shape: 'box' 
+  });
+  
+  // Right Rail
+  parts.push({ 
+    id: uid('rail_r'), 
+    type: 'wall', 
+    position: { x: x + width/2 - railThick/2, y: railY, z }, 
+    size: { x: railThick, y: railH * 0.8, z: depth - postSize*2 }, 
+    color: railColor, 
+    shape: 'box' 
+  });
+
+  // NO BACK RAIL for balconies, assuming they attach to a wall.
+  // This makes it look like a balcony and not a cage.
 
   return parts;
 };
