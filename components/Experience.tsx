@@ -1,14 +1,16 @@
+
 import React from 'react';
 import { OrbitControls } from '@react-three/drei';
 import EnvironmentSettings from './EnvironmentSettings';
 import Ground from './Ground';
 import House from './House';
+import { HouseBlueprint } from '../types/blueprint';
 
 interface ExperienceProps {
-  houseGenerated: boolean;
+  blueprint: HouseBlueprint | null;
 }
 
-const Experience: React.FC<ExperienceProps> = ({ houseGenerated }) => {
+const Experience: React.FC<ExperienceProps> = ({ blueprint }) => {
   return (
     <>
       {/* Camera Controls */}
@@ -38,9 +40,9 @@ const Experience: React.FC<ExperienceProps> = ({ houseGenerated }) => {
         {/* <axesHelper args={[1]} /> */} 
       </group>
 
-      {/* Future: Home will be generated on this ground. */}
+      {/* Construction Zone */}
       <group name="Construction_Zone" position={[0, 0, 0]}>
-        {houseGenerated && <House />}
+        {blueprint && <House blueprint={blueprint} />}
       </group>
 
     </>

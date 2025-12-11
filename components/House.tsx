@@ -1,9 +1,12 @@
 
 import React, { useMemo } from 'react';
-import { mockHouseBlueprint } from '../data/mockHouse';
 import Block from './structure/Block';
 import Roof from './structure/Roof';
-import { ComponentConfig, ComponentType } from '../types/blueprint';
+import { ComponentType, HouseBlueprint } from '../types/blueprint';
+
+interface HouseProps {
+  blueprint: HouseBlueprint;
+}
 
 /**
  * Priority Order for Construction:
@@ -22,14 +25,15 @@ const CONSTRUCTION_PRIORITY: Record<ComponentType, number> = {
   window: 4
 };
 
-const STAGGER_DELAY = 0.15; // Time between individual blocks in the same group
-const GROUP_DELAY = 0.5;   // Time between major groups (Floors -> Walls)
+const STAGGER_DELAY = 0.10; // Time between individual blocks in the same group
+const GROUP_DELAY = 0.4;   // Time between major groups (Floors -> Walls)
 
-const House: React.FC = () => {
-  const blueprint = mockHouseBlueprint;
-
+const House: React.FC<HouseProps> = ({ blueprint }) => {
+  
   // THE ENGINE: Analyze blueprint and calculate build schedule
   const sequencedComponents = useMemo(() => {
+    if (!blueprint || !blueprint.components) return [];
+
     // 1. Sort components by Priority first, then by vertical height (build up)
     const sorted = [...blueprint.components].sort((a, b) => {
       const priorityA = CONSTRUCTION_PRIORITY[a.type] ?? 99;
@@ -43,7 +47,7 @@ const House: React.FC = () => {
     let currentDelay = 0;
     let lastPriority = -1;
 
-    return sorted.map((component, index) => {
+    return sorted.map((component) => {
       const priority = CONSTRUCTION_PRIORITY[component.type] ?? 99;
       
       // If we move to a new construction phase (e.g. Floor -> Wall), add a larger pause
