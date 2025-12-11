@@ -1,60 +1,39 @@
+
 import React from 'react';
 import { Sky, SoftShadows, Stars } from '@react-three/drei';
 
 const EnvironmentSettings: React.FC = () => {
   return (
     <>
-      {/* 
-        SoftShadows:
-        Creates realistic soft shadows typically seen in architectural renders.
-      */}
-      <SoftShadows size={25} samples={10} focus={0} />
+      {/* High fidelity shadows */}
+      <SoftShadows size={25} samples={12} focus={0.5} />
 
-      {/* 
-        Directional Light: 
-        Simulates the sun. Casts the main shadows.
-      */}
+      {/* Main Sun */}
       <directionalLight
         castShadow
-        position={[10, 20, 10]}
-        intensity={1.5}
-        shadow-mapSize={[2048, 2048]} // High res shadows
-        shadow-camera-left={-20}
-        shadow-camera-right={20}
-        shadow-camera-top={20}
-        shadow-camera-bottom={-20}
+        position={[15, 25, 12]}
+        intensity={1.8}
+        shadow-mapSize={[2048, 2048]}
         shadow-bias={-0.0001}
       />
 
-      {/* 
-        Ambient Light:
-        Simulates global illumination bounce (fill light).
-      */}
-      <ambientLight intensity={0.4} />
+      {/* Increased Ambient Light for Stylized/Toon look (fills shadows with color) */}
+      <ambientLight intensity={0.7} />
 
-      {/* 
-        Hemisphere Light:
-        Simulates sky color (blueish) mixing with ground color reflection.
-      */}
-      <hemisphereLight args={["#87CEEB", "#3b8c40", 0.6]} />
+      {/* Hemisphere Light for gradient fill */}
+      <hemisphereLight args={["#87CEEB", "#2d3436", 0.5]} />
 
-      {/* 
-        Sky:
-        Procedural Rayleigh scattering sky.
-      */}
+      {/* Environment */}
       <Sky 
-        sunPosition={[10, 20, 10]} 
-        turbidity={0.5} 
-        rayleigh={0.6} 
+        sunPosition={[15, 25, 12]} 
+        turbidity={0.8} 
+        rayleigh={0.5} 
         mieCoefficient={0.005} 
         mieDirectionalG={0.8} 
       />
       
-      {/* Faint stars for depth if camera looks up high */}
       <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
-      
-      {/* Fog to blend the horizon smoothly */}
-      <fog attach="fog" args={['#eef0f4', 10, 80]} />
+      <fog attach="fog" args={['#eef0f4', 15, 90]} />
     </>
   );
 };

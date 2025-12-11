@@ -3,19 +3,12 @@ import React, { useMemo } from 'react';
 import Block from './structure/Block';
 import Roof from './structure/Roof';
 import { ComponentType, HouseBlueprint } from '../types/blueprint';
+import { generateArchitecture } from '../utils/architect';
 
 interface HouseProps {
   blueprint: HouseBlueprint;
 }
 
-/**
- * Priority Order for Construction:
- * 1. Floors (Foundation)
- * 2. Walls (Structure)
- * 3. Roof (Cover)
- * 4. Generics (Frames/Lintels)
- * 5. Doors/Windows (Openings)
- */
 const CONSTRUCTION_PRIORITY: Record<ComponentType, number> = {
   floor: 0,
   wall: 1,
@@ -25,36 +18,41 @@ const CONSTRUCTION_PRIORITY: Record<ComponentType, number> = {
   window: 4
 };
 
-const STAGGER_DELAY = 0.10; // Time between individual blocks in the same group
-const GROUP_DELAY = 0.4;   // Time between major groups (Floors -> Walls)
+const STAGGER_DELAY = 0.05; 
+const GROUP_DELAY = 0.3;   
 
 const House: React.FC<HouseProps> = ({ blueprint }) => {
   
-  // THE ENGINE: Analyze blueprint and calculate build schedule
-  const sequencedComponents = useMemo(() => {
-    if (!blueprint || !blueprint.components) return [];
+  // 1. ARCHITECT STEP: Expand High-Level Modules into Atomic Components
+  const atomicComponents = useMemo(() => {
+    if (!blueprint || !blueprint.modules) return [];
+    return generateArchitecture(blueprint.modules);
+  }, [blueprint]);
 
-    // 1. Sort components by Priority first, then by vertical height (build up)
-    const sorted = [...blueprint.components].sort((a, b) => {
+  // 2. ENGINE STEP: Sort and Schedule the Atomic Components
+  const sequencedComponents = useMemo(() => {
+    if (atomicComponents.length === 0) return [];
+
+    // Sort by Priority (Floor -> Wall -> Roof)
+    const sorted = [...atomicComponents].sort((a, b) => {
       const priorityA = CONSTRUCTION_PRIORITY[a.type] ?? 99;
       const priorityB = CONSTRUCTION_PRIORITY[b.type] ?? 99;
       
+      // If same priority, build from bottom up (Y axis)
       if (priorityA !== priorityB) return priorityA - priorityB;
       return a.position.y - b.position.y;
     });
 
-    // 2. Calculate Delays
+    // Calculate Delays
     let currentDelay = 0;
     let lastPriority = -1;
 
     return sorted.map((component) => {
       const priority = CONSTRUCTION_PRIORITY[component.type] ?? 99;
       
-      // If we move to a new construction phase (e.g. Floor -> Wall), add a larger pause
       if (priority > lastPriority && lastPriority !== -1) {
         currentDelay += GROUP_DELAY;
       } else {
-        // Otherwise just small stagger
         currentDelay += STAGGER_DELAY;
       }
 
@@ -65,7 +63,7 @@ const House: React.FC<HouseProps> = ({ blueprint }) => {
         _calculatedDelay: currentDelay
       };
     });
-  }, [blueprint]);
+  }, [atomicComponents]);
 
   return (
     <group name={blueprint.id}>

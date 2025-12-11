@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Edges } from '@react-three/drei';
 import { ComponentConfig } from '../../types/blueprint';
 import { useBuildingAnimation } from '../../hooks/useBuildingAnimation';
 
@@ -11,11 +12,38 @@ interface RoofProps {
 const Roof: React.FC<RoofProps> = ({ config, renderDelay = 0 }) => {
   const meshRef = useBuildingAnimation(renderDelay);
   
-  const { size, position, rotation, color } = config;
-  // For ConeGeometry: radius, height, radialSegments
-  // We map x/z to radius (approx) and y to height
+  const { size, position, rotation, color, shape } = config;
+  
+  // Dimensions
+  // If it's a pyramid/cone, radius is roughly half the width
   const radius = size?.x ? size.x / 1.4 : 3; 
   const height = size?.y || 2;
+  const depth = size?.z || 3;
+  const width = size?.x || 3;
+
+  const isPrism = shape === 'prism';
+  const isCylinder = shape === 'cylinder';
+  const isBox = shape === 'box'; 
+
+  // Geometry Selection
+  let Geometry = <coneGeometry args={[radius, height, 4]} />; // Default Pyramid (4 sides)
+
+  if (isPrism) {
+    // A-Frame / Gable
+    Geometry = <cylinderGeometry args={[width/2, width/2, height, 3]} />;
+  } else if (isCylinder) {
+    // Conical Tower Roof
+    Geometry = <coneGeometry args={[radius, height, 32]} />;
+  } else if (isBox) {
+    // Sometimes 'box' shape is passed for flat roofs or explicit pyramid logic from architect
+    // If height is small, it's flat
+    if (height < 0.5) {
+        Geometry = <boxGeometry args={[width, height, depth]} />;
+    } else {
+        // Assume Pyramid for box shape with height
+        Geometry = <coneGeometry args={[width/1.4, height, 4]} />;
+    }
+  }
 
   return (
     <mesh
@@ -26,8 +54,15 @@ const Roof: React.FC<RoofProps> = ({ config, renderDelay = 0 }) => {
       receiveShadow
       scale={[0, 0, 0]}
     >
-      <coneGeometry args={[radius, height, 4]} /> {/* 4 segments = Pyramid */}
+      {Geometry}
+      
       <meshStandardMaterial color={color || '#2c3e50'} roughness={0.9} />
+      
+      {/* Stylized Outline */}
+      <Edges 
+        threshold={15} 
+        color="#1a252f" 
+      />
     </mesh>
   );
 };

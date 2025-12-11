@@ -2,23 +2,23 @@
 import { GoogleGenAI, Type, SchemaParams } from "@google/genai";
 import { HouseBlueprint } from "../types/blueprint";
 
-// Initialize the API client
-// Note: process.env.API_KEY is guaranteed to be available by the environment
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const modelId = "gemini-2.5-flash"; 
 
-const modelId = "gemini-2.5-flash"; // Using Flash for speed, can upgrade to 'gemini-3-pro-preview' for complex logic
+// --- New "Smart Module" Schema ---
 
-// Define the schema to ensure the AI generates valid JSON matching our TypeScript interfaces
-const componentSchema: SchemaParams = {
+const moduleSchema: SchemaParams = {
   type: Type.OBJECT,
   properties: {
-    id: { type: Type.STRING, description: "Unique identifier for the component (e.g., 'wall_1')" },
+    id: { type: Type.STRING },
     type: { 
       type: Type.STRING, 
-      description: "The type of component. Must be one of: 'floor', 'wall', 'roof', 'door', 'window', 'generic'",
+      enum: ['room', 'tower'],
+      description: "The type of structure. 'room' creates a rectangular building block. 'tower' creates a cylindrical spire."
     },
     position: {
       type: Type.OBJECT,
+      description: "Center X/Z position on the ground. Y is usually 0.",
       properties: {
         x: { type: Type.NUMBER },
         y: { type: Type.NUMBER },
@@ -28,7 +28,7 @@ const componentSchema: SchemaParams = {
     },
     size: {
       type: Type.OBJECT,
-      description: "Dimensions in meters [width, height, depth]",
+      description: "Dimensions. For Room: [width, height, depth]. For Tower: [radius, height, radius].",
       properties: {
         x: { type: Type.NUMBER },
         y: { type: Type.NUMBER },
@@ -36,22 +36,18 @@ const componentSchema: SchemaParams = {
       },
       required: ["x", "y", "z"]
     },
-    rotation: {
+    style: {
       type: Type.OBJECT,
-      description: "Euler rotation in radians",
       properties: {
-        x: { type: Type.NUMBER },
-        y: { type: Type.NUMBER },
-        z: { type: Type.NUMBER },
-      },
-    },
-    color: { type: Type.STRING, description: "Hex color code (e.g., '#ff0000')" },
-    material: { 
-      type: Type.STRING, 
-      description: "Material type. Options: 'wood', 'brick', 'glass', 'concrete', 'metal'" 
+        wallColor: { type: Type.STRING },
+        wallMaterial: { type: Type.STRING, enum: ['wood', 'brick', 'concrete', 'stone'] },
+        roofColor: { type: Type.STRING },
+        roofType: { type: Type.STRING, enum: ['flat', 'gable', 'pyramid'] },
+        roofHeight: { type: Type.NUMBER }
+      }
     }
   },
-  required: ["id", "type", "position", "size", "color"]
+  required: ["type", "position", "size"]
 };
 
 const blueprintSchema: SchemaParams = {
@@ -59,12 +55,13 @@ const blueprintSchema: SchemaParams = {
   properties: {
     id: { type: Type.STRING },
     name: { type: Type.STRING },
-    components: {
+    modules: {
       type: Type.ARRAY,
-      items: componentSchema
+      items: moduleSchema,
+      description: "List of architectural modules that make up the house."
     }
   },
-  required: ["id", "name", "components"]
+  required: ["id", "name", "modules"]
 };
 
 export const generateHouseBlueprint = async (prompt: string): Promise<HouseBlueprint> => {
@@ -74,38 +71,32 @@ export const generateHouseBlueprint = async (prompt: string): Promise<HouseBluep
       contents: prompt,
       config: {
         systemInstruction: `
-          You are an expert 3D Architect Engine. Your goal is to generate a JSON blueprint for a house based on user input.
-          
-          COORDINATE SYSTEM RULES:
-          - Y is UP. Ground level is Y=0.
-          - 1 unit = 1 meter.
-          - The center of the plot is (0,0,0).
-          - A standard floor is usually 0.2m thick.
-          - A standard wall is 3m high.
-          
-          COMPONENT LOGIC:
-          - 'floor': foundation slabs.
-          - 'wall': vertical structures.
-          - 'roof': sits on top of walls. Note: 'roof' uses ConeGeometry (pyramid shape). For flat roofs, use a 'floor' type component placed on top.
-          - 'door': purely decorative slab. Place slightly forward (z + 0.05) to avoid Z-fighting.
-          - 'window': decorative slab. Place slightly forward.
-          
-          DESIGN RULES:
-          - Be creative with colors and dimensions.
-          - Ensure walls align to form a closed structure if requested.
-          - Always include a foundation (floor).
+          You are a Senior Level Designer for a Stylized Fantasy Game (like World of Warcraft or Overwatch).
+          Your job is to generate architectural blueprints composed of 'Modules' (Rooms and Towers).
+
+          **DESIGN RULES:**
+          1. **Composition**: Don't just make one box. Combine multiple modules. 
+             - Example: A large central room (6x4x6) + a smaller side room (3x3x4) + a tall tower (radius 1.5) attached to the corner.
+          2. **Stylization**:
+             - Use 'gable' roofs for cottages.
+             - Use 'flat' roofs for modern.
+             - Use 'stone' for towers and foundations.
+             - Use 'wood' for upper floors.
+          3. **Colors**: Use vibrant, coherent color palettes. 
+             - Evil/Gothic: Dark stone walls, dark blue/purple roofs.
+             - Cozy: White/Cream walls, bright orange/red roofs.
+          4. **Placement**: Ensure modules touch or slightly overlap so the building looks connected. Y position should usually be 0 for the ground floor.
+
+          Do not worry about windows or doors yet; the engine handles basic structure first.
         `,
         responseMimeType: "application/json",
         responseSchema: blueprintSchema,
-        temperature: 0.7, // Slightly creative
+        temperature: 0.8, 
       }
     });
 
     if (response.text) {
-      const blueprint = JSON.parse(response.text) as HouseBlueprint;
-      // Ensure specific fields that might be missing are handled or defaults applied if necessary
-      // (The schema handles most strictness, but good to be safe)
-      return blueprint;
+      return JSON.parse(response.text) as HouseBlueprint;
     } else {
       throw new Error("No data returned from AI");
     }

@@ -4,115 +4,32 @@ import { HouseBlueprint } from '../types/blueprint';
 export const mockHouseBlueprint: HouseBlueprint = {
   id: 'house_001',
   name: 'Modern Minimalist Starter',
-  components: [
-    // --- FOUNDATION ---
+  modules: [
     {
-      id: 'foundation',
-      type: 'floor',
-      position: { x: 0, y: 0.1, z: 0 },
-      size: { x: 5.2, y: 0.2, z: 4.2 },
-      color: '#7f8c8d'
+      id: 'main_room',
+      type: 'room',
+      position: { x: 0, y: 0, z: 0 },
+      size: { x: 5, y: 3, z: 4 },
+      style: {
+        wallColor: '#f0f0f0',
+        wallMaterial: 'brick',
+        roofColor: '#2c3e50',
+        roofType: 'gable',
+        roofHeight: 1.5
+      }
     },
     {
-      id: 'step',
-      type: 'floor',
-      position: { x: 0, y: 0.1, z: 2.3 },
-      size: { x: 1.6, y: 0.2, z: 0.6 },
-      color: '#95a5a6'
-    },
-
-    // --- WALLS ---
-    // Back Wall
-    {
-      id: 'wall_back',
-      type: 'wall',
-      position: { x: 0, y: 1.6, z: -2 },
-      size: { x: 5, y: 3, z: 0.2 },
-      color: '#f0f0f0'
-    },
-    // Left Wall
-    {
-      id: 'wall_left',
-      type: 'wall',
-      position: { x: -2.5, y: 1.6, z: 0 },
-      size: { x: 0.2, y: 3, z: 4.2 },
-      color: '#f0f0f0'
-    },
-    // Right Wall
-    {
-      id: 'wall_right',
-      type: 'wall',
-      position: { x: 2.5, y: 1.6, z: 0 },
-      size: { x: 0.2, y: 3, z: 4.2 },
-      color: '#f0f0f0'
-    },
-    // Front Wall (Left Section)
-    {
-      id: 'wall_front_left',
-      type: 'wall',
-      position: { x: -1.6, y: 1.6, z: 2 },
-      size: { x: 1.8, y: 3, z: 0.2 },
-      color: '#f0f0f0'
-    },
-    // Front Wall (Right Section)
-    {
-      id: 'wall_front_right',
-      type: 'wall',
-      position: { x: 1.6, y: 1.6, z: 2 },
-      size: { x: 1.8, y: 3, z: 0.2 },
-      color: '#f0f0f0'
-    },
-    // Front Wall (Top Section above door)
-    {
-      id: 'wall_front_top',
-      type: 'wall',
-      position: { x: 0, y: 2.6, z: 2 },
-      size: { x: 1.4, y: 1, z: 0.2 },
-      color: '#f0f0f0'
-    },
-
-    // --- ROOF ---
-    {
-      id: 'roof_main',
-      type: 'roof',
-      position: { x: 0, y: 3.75, z: 0 },
-      rotation: { x: 0, y: 0.785398, z: 0 }, // 45 degrees
-      size: { x: 4, y: 1.5, z: 4 },
-      color: '#2c3e50'
-    },
-
-    // --- DETAILS ---
-    // Door Frame
-    {
-      id: 'door_frame',
-      type: 'generic',
-      position: { x: 0, y: 1.1, z: 2.05 },
-      size: { x: 1.4, y: 2.2, z: 0.1 },
-      color: '#1a1a1a'
-    },
-    // Door
-    {
-      id: 'door',
-      type: 'door',
-      position: { x: 0, y: 1.1, z: 2.1 }, // Slightly forward to prevent z-fighting
-      size: { x: 1.2, y: 2.1, z: 0.05 },
-      color: '#8d6e63'
-    },
-    // Window Left
-    {
-      id: 'window_left',
-      type: 'window',
-      position: { x: -1.5, y: 2, z: 2.05 },
-      size: { x: 1, y: 1, z: 0.05 },
-      color: '#87CEEB'
-    },
-    // Window Right
-    {
-      id: 'window_right',
-      type: 'window',
-      position: { x: 1.5, y: 2, z: 2.05 },
-      size: { x: 1, y: 1, z: 0.05 },
-      color: '#87CEEB'
+      id: 'tower_1',
+      type: 'tower',
+      position: { x: 3.5, y: 0, z: -1 },
+      size: { x: 1.2, y: 6, z: 1.2 },
+      style: {
+        wallColor: '#bdc3c7',
+        wallMaterial: 'stone',
+        roofColor: '#2980b9',
+        roofType: 'cone',
+        roofHeight: 2
+      }
     }
   ]
 };
