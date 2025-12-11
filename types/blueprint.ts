@@ -16,7 +16,7 @@ export interface ComponentConfig {
   size?: Vector3; // Dimensions [width, height, depth]
   color?: string;
   material?: 'wood' | 'brick' | 'glass' | 'concrete' | 'metal';
-  delay?: number; // Animation delay in seconds
+  // Removed 'delay' - The Engine now calculates this automatically.
 }
 
 export interface HouseBlueprint {

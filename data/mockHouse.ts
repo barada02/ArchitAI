@@ -5,42 +5,38 @@ export const mockHouseBlueprint: HouseBlueprint = {
   id: 'house_001',
   name: 'Modern Minimalist Starter',
   components: [
-    // --- FOUNDATION (Delay 0.0s) ---
+    // --- FOUNDATION ---
     {
       id: 'foundation',
       type: 'floor',
       position: { x: 0, y: 0.1, z: 0 },
-      size: { x: 5.2, y: 0.2, z: 4.2 }, // Slightly larger than walls
-      color: '#7f8c8d',
-      delay: 0
+      size: { x: 5.2, y: 0.2, z: 4.2 },
+      color: '#7f8c8d'
     },
     {
       id: 'step',
       type: 'floor',
       position: { x: 0, y: 0.1, z: 2.3 },
       size: { x: 1.6, y: 0.2, z: 0.6 },
-      color: '#95a5a6',
-      delay: 0.2
+      color: '#95a5a6'
     },
 
-    // --- WALLS (Delay 0.5s) ---
+    // --- WALLS ---
     // Back Wall
     {
       id: 'wall_back',
       type: 'wall',
       position: { x: 0, y: 1.6, z: -2 },
       size: { x: 5, y: 3, z: 0.2 },
-      color: '#f0f0f0',
-      delay: 0.5
+      color: '#f0f0f0'
     },
     // Left Wall
     {
       id: 'wall_left',
       type: 'wall',
       position: { x: -2.5, y: 1.6, z: 0 },
-      size: { x: 0.2, y: 3, z: 4.2 }, // Overlap specifically calculated
-      color: '#f0f0f0',
-      delay: 0.6
+      size: { x: 0.2, y: 3, z: 4.2 },
+      color: '#f0f0f0'
     },
     // Right Wall
     {
@@ -48,8 +44,7 @@ export const mockHouseBlueprint: HouseBlueprint = {
       type: 'wall',
       position: { x: 2.5, y: 1.6, z: 0 },
       size: { x: 0.2, y: 3, z: 4.2 },
-      color: '#f0f0f0',
-      delay: 0.7
+      color: '#f0f0f0'
     },
     // Front Wall (Left Section)
     {
@@ -57,8 +52,7 @@ export const mockHouseBlueprint: HouseBlueprint = {
       type: 'wall',
       position: { x: -1.6, y: 1.6, z: 2 },
       size: { x: 1.8, y: 3, z: 0.2 },
-      color: '#f0f0f0',
-      delay: 0.8
+      color: '#f0f0f0'
     },
     // Front Wall (Right Section)
     {
@@ -66,8 +60,7 @@ export const mockHouseBlueprint: HouseBlueprint = {
       type: 'wall',
       position: { x: 1.6, y: 1.6, z: 2 },
       size: { x: 1.8, y: 3, z: 0.2 },
-      color: '#f0f0f0',
-      delay: 0.8
+      color: '#f0f0f0'
     },
     // Front Wall (Top Section above door)
     {
@@ -75,39 +68,35 @@ export const mockHouseBlueprint: HouseBlueprint = {
       type: 'wall',
       position: { x: 0, y: 2.6, z: 2 },
       size: { x: 1.4, y: 1, z: 0.2 },
-      color: '#f0f0f0',
-      delay: 0.9
+      color: '#f0f0f0'
     },
 
-    // --- ROOF (Delay 1.2s) ---
+    // --- ROOF ---
     {
       id: 'roof_main',
       type: 'roof',
       position: { x: 0, y: 3.75, z: 0 },
       rotation: { x: 0, y: 0.785398, z: 0 }, // 45 degrees
-      size: { x: 4, y: 1.5, z: 4 }, // Cone geometry uses radius/height
-      color: '#2c3e50',
-      delay: 1.2
+      size: { x: 4, y: 1.5, z: 4 },
+      color: '#2c3e50'
     },
 
-    // --- DETAILS (Delay 1.5s+) ---
+    // --- DETAILS ---
     // Door Frame
     {
       id: 'door_frame',
       type: 'generic',
       position: { x: 0, y: 1.1, z: 2.05 },
       size: { x: 1.4, y: 2.2, z: 0.1 },
-      color: '#1a1a1a',
-      delay: 1.5
+      color: '#1a1a1a'
     },
     // Door
     {
       id: 'door',
       type: 'door',
-      position: { x: 0, y: 1.1, z: 2.1 },
+      position: { x: 0, y: 1.1, z: 2.1 }, // Slightly forward to prevent z-fighting
       size: { x: 1.2, y: 2.1, z: 0.05 },
-      color: '#8d6e63',
-      delay: 1.6
+      color: '#8d6e63'
     },
     // Window Left
     {
@@ -115,8 +104,7 @@ export const mockHouseBlueprint: HouseBlueprint = {
       type: 'window',
       position: { x: -1.5, y: 2, z: 2.05 },
       size: { x: 1, y: 1, z: 0.05 },
-      color: '#87CEEB',
-      delay: 1.8
+      color: '#87CEEB'
     },
     // Window Right
     {
@@ -124,8 +112,7 @@ export const mockHouseBlueprint: HouseBlueprint = {
       type: 'window',
       position: { x: 1.5, y: 2, z: 2.05 },
       size: { x: 1, y: 1, z: 0.05 },
-      color: '#87CEEB',
-      delay: 1.9
+      color: '#87CEEB'
     }
   ]
 };

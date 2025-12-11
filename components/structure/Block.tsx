@@ -5,10 +5,11 @@ import { useBuildingAnimation } from '../../hooks/useBuildingAnimation';
 
 interface BlockProps {
   config: ComponentConfig;
+  renderDelay?: number;
 }
 
-const Block: React.FC<BlockProps> = ({ config }) => {
-  const meshRef = useBuildingAnimation(config.delay);
+const Block: React.FC<BlockProps> = ({ config, renderDelay = 0 }) => {
+  const meshRef = useBuildingAnimation(renderDelay);
   
   const { size, position, rotation, color, material } = config;
   const width = size?.x || 1;
@@ -28,7 +29,6 @@ const Block: React.FC<BlockProps> = ({ config }) => {
       rotation={[rotation?.x || 0, rotation?.y || 0, rotation?.z || 0]}
       castShadow
       receiveShadow
-      // Initial scale 0 handled by the hook, but good practice to set initial prop too
       scale={[0, 0, 0]} 
     >
       <boxGeometry args={[width, height, depth]} />

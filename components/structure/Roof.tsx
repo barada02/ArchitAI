@@ -5,10 +5,11 @@ import { useBuildingAnimation } from '../../hooks/useBuildingAnimation';
 
 interface RoofProps {
   config: ComponentConfig;
+  renderDelay?: number;
 }
 
-const Roof: React.FC<RoofProps> = ({ config }) => {
-  const meshRef = useBuildingAnimation(config.delay);
+const Roof: React.FC<RoofProps> = ({ config, renderDelay = 0 }) => {
+  const meshRef = useBuildingAnimation(renderDelay);
   
   const { size, position, rotation, color } = config;
   // For ConeGeometry: radius, height, radialSegments
