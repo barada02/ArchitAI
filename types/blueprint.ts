@@ -17,7 +17,7 @@ export interface ComponentConfig {
   size?: Vector3; // [width, height, depth]
   color?: string;
   material?: 'wood' | 'brick' | 'glass' | 'concrete' | 'metal' | 'stone' | 'roof_tiles';
-  shape?: 'box' | 'cylinder' | 'prism'; 
+  shape?: 'box' | 'cylinder' | 'prism' | 'pyramid'; 
   renderDelay?: number; // Runtime calculation
 }
 

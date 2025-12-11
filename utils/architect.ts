@@ -10,8 +10,9 @@ import { ComponentConfig, ModuleConfig, Vector3 } from "../types/blueprint";
  * 3. Returns a flat list of atomic components for the Renderer.
  */
 
-const WALL_THICKNESS = 0.25; // Slightly thicker to prevent Z-fighting on edges
+const WALL_THICKNESS = 0.25; 
 const FLOOR_HEIGHT = 0.2;
+const ROOF_OVERHANG = 0.6; // Standard overhang
 
 // Helper to generate a unique ID
 const uid = (prefix: string) => `${prefix}_${Math.random().toString(36).substr(2, 9)}`;
@@ -77,14 +78,14 @@ const generateRoom = (module: ModuleConfig): ComponentConfig[] => {
     shape: 'box'
   });
 
-  // East Wall (+X) - Width matches depth minus overlaps to avoid z-fighting
+  // East Wall (+X)
   const sideWallWidth = clamp(depth - (WALL_THICKNESS * 2));
   
   parts.push({
     id: uid('wall_e'),
     type: 'wall',
     position: { x: x + width / 2 - WALL_THICKNESS / 2, y: wallY, z },
-    size: { x: WALL_THICKNESS, y: wallH, z: sideWallWidth }, // Tuck inside
+    size: { x: WALL_THICKNESS, y: wallH, z: sideWallWidth },
     color: style.wallColor || '#ecf0f1',
     material: style.wallMaterial || 'brick',
     shape: 'box'
@@ -103,18 +104,19 @@ const generateRoom = (module: ModuleConfig): ComponentConfig[] => {
 
   // 3. Roof
   const roofH = clamp(style.roofHeight || 1.5);
-  const roofY = y + FLOOR_HEIGHT + wallH + (style.roofType === 'flat' ? 0.1 : roofH / 2);
+  // Position: Top of wall + half roof height (since geometry is usually centered)
+  const roofY = y + FLOOR_HEIGHT + wallH + roofH / 2; 
+  // For Flat roofs, it's just a thin lid, so shift down slightly
+  const flatRoofY = y + FLOOR_HEIGHT + wallH + 0.1;
 
   if (style.roofType === 'gable') {
-    // Prism Roof (A-Frame)
     parts.push({
       id: uid('roof'),
       type: 'roof',
       position: { x, y: roofY, z },
-      // Rotate 90 deg on Y to align with width, or 0 for depth. 
-      // Defaulting to align with the wider side or X axis.
-      rotation: { x: 0, y: Math.PI / 2, z: 0 }, 
-      size: { x: depth + 0.6, y: roofH, z: width + 0.6 }, // Overhang
+      // Pass the FULL size including overhangs. 
+      // Rotation is handled by the Component based on aspect ratio (Portrait/Landscape).
+      size: { x: width + ROOF_OVERHANG, y: roofH, z: depth + ROOF_OVERHANG },
       color: style.roofColor || '#2c3e50',
       shape: 'prism'
     });
@@ -123,20 +125,17 @@ const generateRoom = (module: ModuleConfig): ComponentConfig[] => {
       id: uid('roof'),
       type: 'roof',
       position: { x, y: roofY, z },
-      // IMPORTANT: Rotate 45deg (PI/4) because a 4-sided Cone geometry is diamond-oriented by default
-      rotation: { x: 0, y: Math.PI / 4, z: 0 },
-      // Scale radius up by sqrt(2) approx (1.5) to cover corners
-      size: { x: width * 1.5, y: roofH, z: depth * 1.5 },
+      size: { x: width + ROOF_OVERHANG, y: roofH, z: depth + ROOF_OVERHANG },
       color: style.roofColor || '#2c3e50',
-      shape: 'box' // Roof.tsx interprets 'box' as a generic pyramid/flat handler
+      shape: 'pyramid'
     });
   } else {
     // Flat
     parts.push({
       id: uid('roof'),
       type: 'roof',
-      position: { x, y: roofY, z },
-      size: { x: width + 0.5, y: 0.2, z: depth + 0.5 },
+      position: { x, y: flatRoofY, z },
+      size: { x: width + 0.4, y: 0.2, z: depth + 0.4 },
       color: style.roofColor || '#2c3e50',
       shape: 'box'
     });
@@ -149,14 +148,14 @@ const generateTower = (module: ModuleConfig): ComponentConfig[] => {
   const parts: ComponentConfig[] = [];
   const { position, size, style } = module;
   const { x, y, z } = position;
-  const { x: radius, y: height } = size; // x is radius, y is height
+  const { x: radius, y: height } = size; 
 
   // Tower Body
   parts.push({
     id: uid('tower_body'),
     type: 'wall',
     position: { x, y: y + height / 2, z },
-    size: { x: radius, y: height, z: radius }, // Cylinder uses x/z as radii
+    size: { x: radius, y: height, z: radius },
     color: style.wallColor || '#95a5a6',
     material: style.wallMaterial || 'stone',
     shape: 'cylinder'
@@ -168,9 +167,9 @@ const generateTower = (module: ModuleConfig): ComponentConfig[] => {
     id: uid('tower_roof'),
     type: 'roof',
     position: { x, y: y + height + roofH / 2, z },
-    size: { x: radius + 0.5, y: roofH, z: radius + 0.5 }, // Overhang
+    size: { x: radius + 0.5, y: roofH, z: radius + 0.5 },
     color: style.roofColor || '#2980b9',
-    shape: 'cylinder' // Roof component treats cylinder/box as Cone usually or we add explicit logic
+    shape: 'cylinder' 
   });
 
   return parts;
