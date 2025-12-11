@@ -14,6 +14,26 @@ const WALL_THICKNESS = 0.25;
 const FLOOR_HEIGHT = 0.2;
 const ROOF_OVERHANG = 0.6; 
 
+// --- COLOR UTILITIES ---
+const COLOR_MAP: Record<string, string> = {
+  'terracotta': '#E2725B',
+  'cream': '#FFFDD0',
+  'beige': '#F5F5DC',
+  'sand': '#C2B280',
+  'khaki': '#F0E68C',
+  'brick': '#800000', // In case AI passes material name as color
+  'wood': '#8B4513',
+  'concrete': '#95a5a6',
+  'stone': '#7f8c8d'
+};
+
+const resolveColor = (input: string | undefined, fallback: string): string => {
+  if (!input) return fallback;
+  const lower = input.toLowerCase().trim();
+  if (COLOR_MAP[lower]) return COLOR_MAP[lower];
+  return input;
+};
+
 // Helper to generate a unique ID
 const uid = (prefix: string) => `${prefix}_${Math.random().toString(36).substr(2, 9)}`;
 
@@ -48,9 +68,12 @@ export const generateArchitecture = (modules: ModuleConfig[]): ComponentConfig[]
 
 const generateRoom = (module: ModuleConfig): ComponentConfig[] => {
   const parts: ComponentConfig[] = [];
-  const { position, size, style } = module;
+  const { position, size, style = {} } = module; // Default style to {}
   const { x, y, z } = position;
   const { x: width, y: height, z: depth } = size;
+  
+  const wallColor = resolveColor(style.wallColor, '#ecf0f1');
+  const roofColor = resolveColor(style.roofColor, '#2c3e50');
 
   // 1. Foundation / Floor
   parts.push({
@@ -73,7 +96,7 @@ const generateRoom = (module: ModuleConfig): ComponentConfig[] => {
     type: 'wall',
     position: { x, y: wallY, z: z - depth / 2 + WALL_THICKNESS / 2 },
     size: { x: width, y: wallH, z: WALL_THICKNESS },
-    color: style.wallColor || '#ecf0f1',
+    color: wallColor,
     material: style.wallMaterial || 'brick',
     shape: 'box'
   });
@@ -95,7 +118,7 @@ const generateRoom = (module: ModuleConfig): ComponentConfig[] => {
       type: 'wall',
       position: { x: x - (width/2) + (wallLeftW/2), y: wallY, z: z + depth / 2 - WALL_THICKNESS / 2 },
       size: { x: wallLeftW, y: wallH, z: WALL_THICKNESS },
-      color: style.wallColor || '#ecf0f1',
+      color: wallColor,
       material: style.wallMaterial || 'brick',
       shape: 'box'
     });
@@ -105,7 +128,7 @@ const generateRoom = (module: ModuleConfig): ComponentConfig[] => {
       type: 'wall',
       position: { x: x + (width/2) - (wallRightW/2), y: wallY, z: z + depth / 2 - WALL_THICKNESS / 2 },
       size: { x: wallRightW, y: wallH, z: WALL_THICKNESS },
-      color: style.wallColor || '#ecf0f1',
+      color: wallColor,
       material: style.wallMaterial || 'brick',
       shape: 'box'
     });
@@ -115,7 +138,7 @@ const generateRoom = (module: ModuleConfig): ComponentConfig[] => {
       type: 'wall',
       position: { x: x, y: (y + FLOOR_HEIGHT) + doorH + (wallTopH/2), z: z + depth / 2 - WALL_THICKNESS / 2 },
       size: { x: doorW, y: wallTopH, z: WALL_THICKNESS },
-      color: style.wallColor || '#ecf0f1',
+      color: wallColor,
       material: style.wallMaterial || 'brick',
       shape: 'box'
     });
@@ -136,7 +159,7 @@ const generateRoom = (module: ModuleConfig): ComponentConfig[] => {
       type: 'wall',
       position: { x, y: wallY, z: z + depth / 2 - WALL_THICKNESS / 2 },
       size: { x: width, y: wallH, z: WALL_THICKNESS },
-      color: style.wallColor || '#ecf0f1',
+      color: wallColor,
       material: style.wallMaterial || 'brick',
       shape: 'box'
     });
@@ -149,7 +172,7 @@ const generateRoom = (module: ModuleConfig): ComponentConfig[] => {
     type: 'wall',
     position: { x: x + width / 2 - WALL_THICKNESS / 2, y: wallY, z },
     size: { x: WALL_THICKNESS, y: wallH, z: sideWallWidth },
-    color: style.wallColor || '#ecf0f1',
+    color: wallColor,
     material: style.wallMaterial || 'brick',
     shape: 'box'
   });
@@ -158,7 +181,7 @@ const generateRoom = (module: ModuleConfig): ComponentConfig[] => {
     type: 'wall',
     position: { x: x - width / 2 + WALL_THICKNESS / 2, y: wallY, z },
     size: { x: WALL_THICKNESS, y: wallH, z: sideWallWidth },
-    color: style.wallColor || '#ecf0f1',
+    color: wallColor,
     material: style.wallMaterial || 'brick',
     shape: 'box'
   });
@@ -174,7 +197,7 @@ const generateRoom = (module: ModuleConfig): ComponentConfig[] => {
       type: 'roof',
       position: { x, y: roofY, z },
       size: { x: width + ROOF_OVERHANG, y: roofH, z: depth + ROOF_OVERHANG },
-      color: style.roofColor || '#2c3e50',
+      color: roofColor,
       shape: 'prism'
     });
   } else if (style.roofType === 'pyramid') {
@@ -183,7 +206,7 @@ const generateRoom = (module: ModuleConfig): ComponentConfig[] => {
       type: 'roof',
       position: { x, y: roofY, z },
       size: { x: width + ROOF_OVERHANG, y: roofH, z: depth + ROOF_OVERHANG },
-      color: style.roofColor || '#2c3e50',
+      color: roofColor,
       shape: 'pyramid'
     });
   } else {
@@ -192,7 +215,7 @@ const generateRoom = (module: ModuleConfig): ComponentConfig[] => {
       type: 'roof',
       position: { x, y: flatRoofY, z },
       size: { x: width + 0.4, y: 0.2, z: depth + 0.4 },
-      color: style.roofColor || '#2c3e50',
+      color: roofColor,
       shape: 'box'
     });
   }
@@ -202,16 +225,19 @@ const generateRoom = (module: ModuleConfig): ComponentConfig[] => {
 
 const generateTower = (module: ModuleConfig): ComponentConfig[] => {
   const parts: ComponentConfig[] = [];
-  const { position, size, style } = module;
+  const { position, size, style = {} } = module; // Default style to {}
   const { x, y, z } = position;
   const { x: radius, y: height } = size; 
+  
+  const wallColor = resolveColor(style.wallColor, '#95a5a6');
+  const roofColor = resolveColor(style.roofColor, '#2980b9');
 
   parts.push({
     id: uid('tower_body'),
     type: 'wall',
     position: { x, y: y + height / 2, z },
     size: { x: radius, y: height, z: radius },
-    color: style.wallColor || '#95a5a6',
+    color: wallColor,
     material: style.wallMaterial || 'stone',
     shape: 'cylinder'
   });
@@ -222,7 +248,7 @@ const generateTower = (module: ModuleConfig): ComponentConfig[] => {
     type: 'roof',
     position: { x, y: y + height + roofH / 2, z },
     size: { x: radius + 0.5, y: roofH, z: radius + 0.5 },
-    color: style.roofColor || '#2980b9',
+    color: roofColor,
     shape: 'cylinder' 
   });
 
@@ -231,12 +257,13 @@ const generateTower = (module: ModuleConfig): ComponentConfig[] => {
 
 const generateBoundary = (module: ModuleConfig): ComponentConfig[] => {
   const parts: ComponentConfig[] = [];
-  const { position, size, style } = module;
+  const { position, size, style = {} } = module; // Default style to {}
   const { x, y, z } = position;
   const { x: width, y: height, z: depth } = size;
 
   const wallH = height;
   const wallY = y + wallH / 2;
+  const wallColor = resolveColor(style.wallColor, '#bdc3c7');
   
   // FIXED DIMENSIONS
   const gateWidth = 2.0;
@@ -244,20 +271,10 @@ const generateBoundary = (module: ModuleConfig): ComponentConfig[] => {
   const wallThick = 0.25;
 
   // 1. GATE PILLARS & GATE (South Side)
-  // To avoid overlap, we calculate the remaining width for the walls
-  // Total Width = Left Wall + Pillar + Gate + Pillar + Right Wall
-  // Wall Width = (Total - Gate - 2*Pillar) / 2
   const availableForWalls = width - gateWidth - (pillarSize * 2);
   const wallSegWidth = Math.max(0.1, availableForWalls / 2);
   
   const pillarH = wallH + 0.3; // Pillars stand proud
-  
-  // Positions
-  // Center is x. 
-  // Gate is at x.
-  // Right Pillar Center = x + gateWidth/2 + pillarSize/2
-  // Right Wall Center = Right Pillar Edge + wallSegWidth/2
-  // Right Pillar Edge = x + gateWidth/2 + pillarSize
   
   const rPillarX = x + gateWidth/2 + pillarSize/2;
   const lPillarX = x - gateWidth/2 - pillarSize/2;
@@ -271,7 +288,7 @@ const generateBoundary = (module: ModuleConfig): ComponentConfig[] => {
     type: 'wall',
     position: { x: lWallX, y: wallY, z: z + depth/2 },
     size: { x: wallSegWidth, y: wallH, z: wallThick },
-    color: style.wallColor || '#bdc3c7',
+    color: wallColor,
     shape: 'box'
   });
   
@@ -281,7 +298,7 @@ const generateBoundary = (module: ModuleConfig): ComponentConfig[] => {
     type: 'wall',
     position: { x: rWallX, y: wallY, z: z + depth/2 },
     size: { x: wallSegWidth, y: wallH, z: wallThick },
-    color: style.wallColor || '#bdc3c7',
+    color: wallColor,
     shape: 'box'
   });
 
@@ -307,7 +324,7 @@ const generateBoundary = (module: ModuleConfig): ComponentConfig[] => {
   parts.push({
     id: uid('bound_gate'),
     type: 'door',
-    position: { x: x, y: y + wallH * 0.45, z: z + depth/2 }, // Slightly higher off ground? No, ground level.
+    position: { x: x, y: y + wallH * 0.45, z: z + depth/2 }, 
     size: { x: gateWidth, y: wallH * 0.9, z: 0.1 }, 
     color: '#5d4037', // Wood
     material: 'wood',
@@ -321,7 +338,7 @@ const generateBoundary = (module: ModuleConfig): ComponentConfig[] => {
     type: 'wall',
     position: { x, y: wallY, z: z - depth/2 },
     size: { x: width, y: wallH, z: wallThick },
-    color: style.wallColor || '#bdc3c7',
+    color: wallColor,
     shape: 'box'
   });
   // East - Needs to span the full depth
@@ -330,7 +347,7 @@ const generateBoundary = (module: ModuleConfig): ComponentConfig[] => {
     type: 'wall',
     position: { x: x + width/2, y: wallY, z },
     size: { x: wallThick, y: wallH, z: depth },
-    color: style.wallColor || '#bdc3c7',
+    color: wallColor,
     shape: 'box'
   });
   // West
@@ -339,7 +356,7 @@ const generateBoundary = (module: ModuleConfig): ComponentConfig[] => {
     type: 'wall',
     position: { x: x - width/2, y: wallY, z },
     size: { x: wallThick, y: wallH, z: depth },
-    color: style.wallColor || '#bdc3c7',
+    color: wallColor,
     shape: 'box'
   });
 
@@ -348,9 +365,11 @@ const generateBoundary = (module: ModuleConfig): ComponentConfig[] => {
 
 const generateBalcony = (module: ModuleConfig): ComponentConfig[] => {
   const parts: ComponentConfig[] = [];
-  const { position, size, style } = module;
+  const { position, size, style = {} } = module; // Default style to {}
   const { x, y, z } = position;
   const { x: width, y: height, z: depth } = size;
+  
+  const floorColor = resolveColor(style.wallColor, '#bdc3c7');
 
   // 1. Floor Platform
   parts.push({
@@ -358,7 +377,7 @@ const generateBalcony = (module: ModuleConfig): ComponentConfig[] => {
     type: 'floor',
     position: { x, y: y + 0.1, z },
     size: { x: width, y: 0.2, z: depth },
-    color: style.wallColor || '#bdc3c7',
+    color: floorColor,
     material: 'concrete',
     shape: 'box'
   });
@@ -386,7 +405,6 @@ const generateBalcony = (module: ModuleConfig): ComponentConfig[] => {
   addPost(x + width/2 - postSize/2, z - depth/2 + postSize/2); // Back Right
 
   // 3. Railings
-  // Made thinner and glass-like or metal
   const railThick = 0.05;
   const railY = y + 0.2 + railH/2;
   const railColor = '#34495e';
@@ -420,9 +438,6 @@ const generateBalcony = (module: ModuleConfig): ComponentConfig[] => {
     color: railColor, 
     shape: 'box' 
   });
-
-  // NO BACK RAIL for balconies, assuming they attach to a wall.
-  // This makes it look like a balcony and not a cage.
 
   return parts;
 };

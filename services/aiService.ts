@@ -47,7 +47,7 @@ const moduleSchema: SchemaParams = {
       }
     }
   },
-  required: ["type", "position", "size"]
+  required: ["type", "position", "size", "style"]
 };
 
 const blueprintSchema: SchemaParams = {

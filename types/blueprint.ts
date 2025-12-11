@@ -27,7 +27,7 @@ export interface ModuleConfig {
   type: 'room' | 'tower' | 'boundary' | 'balcony';
   position: Vector3; // Center bottom position
   size: Vector3;     // [width, height, depth]
-  style: {
+  style?: {          // Made Optional
     wallColor?: string;
     wallMaterial?: 'wood' | 'brick' | 'concrete' | 'stone';
     roofColor?: string;
